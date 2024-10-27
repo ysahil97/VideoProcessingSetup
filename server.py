@@ -2,7 +2,6 @@ import http.server
 import json
 import time
 import random
-import threading
 from urllib.parse import urlparse
 
 class TranslationJob:
@@ -26,7 +25,7 @@ class TranslationJob:
 
 class TranslationServer(http.server.SimpleHTTPRequestHandler):
     # Class variable to store the translation job
-    translation_job = TranslationJob(expected_duration=30)  # 30 seconds for testing
+    translation_job = TranslationJob(expected_duration=60)  # 60 seconds for testing
     
     def do_GET(self):
         parsed_path = urlparse(self.path)
