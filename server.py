@@ -6,10 +6,11 @@ import threading
 from urllib.parse import urlparse
 
 class TranslationJob:
-    def __init__(self, expected_duration):
+    def __init__(self, expected_duration,error_percentage=0.1):
         self.start_time = time.time()
         self.expected_duration = expected_duration
         self.status = "pending"
+        self.error_percentage = error_percentage
         
     def get_status(self):
         if self.status != "pending":
@@ -19,7 +20,7 @@ class TranslationJob:
         
         if elapsed_time >= self.expected_duration:
             # 10% chance of error
-            self.status = "error" if random.random() < 0.1 else "completed"
+            self.status = "error" if random.random() < self.error_percentage else "completed"
             
         return self.status
 
