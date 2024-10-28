@@ -73,7 +73,7 @@ class AsyncTranslationClient:
                     error=str(e)
                 )
 
-    async def wait_for_completion(self,
+    async def make_complete_request(self,
                                 progress_callback: Optional[Callable] = None,
                                 error_callback: Optional[Callable] = None) -> TranslationResponse:
         """
@@ -160,7 +160,7 @@ async def main():
     
     try:
         # Single job monitoring
-        result = await client.wait_for_completion(
+        result = await client.make_complete_request(
             progress_callback=print_progress,
             error_callback=print_error
         )
