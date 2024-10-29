@@ -1,7 +1,10 @@
-import http.server
+# import http.server
+from fastapi import FastAPI, HTTPException
+import uvicorn
 import json
 import time
 import random
+from typing import Dict
 from urllib.parse import urlparse
 
 class TranslationJob:
@@ -23,28 +26,22 @@ class TranslationJob:
             
         return self.status
 
-class TranslationServer(http.server.SimpleHTTPRequestHandler):
-    # Class variable to store the translation job
-    translation_job = TranslationJob(expected_duration=60)  # 60 seconds for testing
-    
-    def do_GET(self):
-        parsed_path = urlparse(self.path)
-        if parsed_path.path == "/status":
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            
-            status = self.translation_job.get_status()
-            response = json.dumps({"result": status})
-            self.wfile.write(response.encode())
-        else:
-            self.send_response(404)
-            self.end_headers()
-            self.wfile.write(b'Not Found')
+
+app = FastAPI()
+jobs: Dict[str, TranslationJob] = {}
+
+@app.get("/status")
+async def get_status():
+    if len(jobs) == 1:
+        jkey = list(jobs.keys())[0]
+        status = jobs[jkey].get_status()
+        return {"result":status}
 
 def run_server():
     """Start the translation status server"""
-    server_address = ('', 8000)
-    httpd = http.server.HTTPServer(server_address, TranslationServer)
+    # server_address = ('', 8000)
+    # httpd = http.server.HTTPServer(server_address, TranslationServer)
+    jobs["job_one"] = TranslationJob(expected_duration=60)
+    uvicorn.run(app,host="127.0.0.1",port=8000)
     print("Server running on port 8000...")
-    httpd.serve_forever()
+    # httpd.serve_forever()

@@ -8,7 +8,7 @@ from typing import Optional, Callable, Dict, Any
 from dataclasses import dataclass
 import threading
 from enum import Enum
-from server import TranslationServer
+from server import run_server
 
 @dataclass
 class TranslationResponse:
@@ -47,10 +47,12 @@ class AsyncTranslationClient:
         """Make async HTTP request with error handling"""
         async with self.semaphore:  # Limit concurrent requests
             try:
+                print(f"{self.base_url}/status")
                 async with session.get(
                     f"{self.base_url}/status",
                     timeout=aiohttp.ClientTimeout(total=10)
                 ) as response:
+                    print("Make request response: ",response)
                     if response.status != 200:
                         return TranslationResponse(
                             status="error",
@@ -100,7 +102,7 @@ class AsyncTranslationClient:
                     raise Exception("Timeout waiting for translation completion")
                 
                 response = await self._make_request(session)
-                
+                print("Response: ",response)
                 if response.status == "error":
                     consecutive_errors += 1
                     if consecutive_errors >= 3:
@@ -133,9 +135,9 @@ class AsyncTranslationClient:
 
 # Example usage
 async def main():
-    def run_server():
-        server = http.server.HTTPServer(('', 8000), TranslationServer)
-        server.serve_forever()
+    # def run_server():
+    #     server = http.server.HTTPServer(('', 8000), TranslationServer)
+    #     server.serve_forever()
     
     # Start server in a thread
     server_thread = threading.Thread(target=run_server)
