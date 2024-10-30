@@ -21,7 +21,7 @@ async def func_client(url_port: int, expected_duration: int,job_id: str):
     async with AsyncTranslationClient(base_url) as client:
         try:
             start_time = time.time()
-            final_status = await client.make_complete_request(progress_callback=status_callback)
+            final_status = await client.make_complete_request(progress_callback=status_callback,job_id=job_id)
             duration = time.time() - start_time
             
             logger.info(f"Final status: {final_status}")

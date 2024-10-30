@@ -5,24 +5,30 @@ import json
 import time
 import random
 from typing import Dict
+from enum import Enum
 from urllib.parse import urlparse
+
+class VideoTranslationStatus(Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    ERROR = "error"
 
 class TranslationJob:
     def __init__(self, expected_duration,error_percentage=0.1):
         self.start_time = time.time()
         self.expected_duration = expected_duration
-        self.status = "pending"
+        self.status = VideoTranslationStatus.PENDING
         self.error_percentage = error_percentage
         
     def get_status(self):
-        if self.status != "pending":
+        if self.status != VideoTranslationStatus.PENDING:
             return self.status
             
         elapsed_time = time.time() - self.start_time
         
         if elapsed_time >= self.expected_duration:
             # 10% chance of error
-            self.status = "error" if random.random() < self.error_percentage else "completed"
+            self.status = VideoTranslationStatus.ERROR if random.random() < self.error_percentage else VideoTranslationStatus.COMPLETED
             
         return self.status
 

@@ -5,11 +5,12 @@ import http.server
 import random
 import time
 from typing import Dict,Any
+# from functools import lru_cache
 from typing import Optional, Callable, Dict, Any
 from dataclasses import dataclass
 import threading
-from enum import Enum
-from server import run_server
+# from enum import Enum
+from server import run_server,VideoTranslationStatus
 
 @dataclass
 class TranslationResponse:
@@ -33,7 +34,7 @@ class CacheManager:
                 return None
 
     def set(self, key:str,value:Any):
-        self._cache[key] = tuple(value,time.time())
+        self._cache[key] = (value,time.time())
 
 class AsyncTranslationClient:
     def __init__(self, 
@@ -64,6 +65,7 @@ class AsyncTranslationClient:
         """Add random jitter to avoid thundering herd problem"""
         return delay * (0.5 + random.random())
 
+    # @lru_cache(maxsize=1000)
     def _get_cache_key(self,job_id: str) -> str:
         return f"status:{job_id}"
     
@@ -72,7 +74,7 @@ class AsyncTranslationClient:
         cache_key = self._get_cache_key(job_id)
 
         cached_response = self.cache.get(cache_key)
-
+        print("Cached Response: ",cached_response)
         if cached_response:
             return cached_response
         """Make async HTTP request with error handling"""
@@ -86,25 +88,26 @@ class AsyncTranslationClient:
                     print("Make request response: ",response)
                     if response.status != 200:
                         return TranslationResponse(
-                            status="error",
+                            status=VideoTranslationStatus.ERROR,
                             error=f"Server returned status {response.status}"
                         )
                     
                     data = await response.json()
+                    print("response data",data)
                     translation_result = TranslationResponse(
                         status=data["result"]
                     )
-                    if translation_result.status != "pending":
+                    if translation_result.status != VideoTranslationStatus.PENDING:
                         self.cache.set(cache_key,translation_result)
                     return translation_result
             except asyncio.TimeoutError:
                 return TranslationResponse(
-                    status="error",
+                    status=VideoTranslationStatus.ERROR,
                     error="Request timed out"
                 )
             except Exception as e:
                 return TranslationResponse(
-                    status="error",
+                    status=VideoTranslationStatus.ERROR,
                     error=str(e)
                 )
 
