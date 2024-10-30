@@ -5,7 +5,7 @@ import http.server
 import random
 import time
 from typing import Dict,Any
-# from functools import lru_cache
+from functools import lru_cache
 from typing import Optional, Callable, Dict, Any
 from dataclasses import dataclass
 import threading
@@ -65,7 +65,7 @@ class AsyncTranslationClient:
         """Add random jitter to avoid thundering herd problem"""
         return delay * (0.5 + random.random())
 
-    # @lru_cache(maxsize=1000)
+    @lru_cache(maxsize=1000)
     def _get_cache_key(self,job_id: str) -> str:
         return f"status:{job_id}"
     

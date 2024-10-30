@@ -39,20 +39,20 @@ def test_run_integration_test():
     expected_duration = 60  # seconds
     
     # Start server in a separate process
-    # server_process = multiprocessing.Process(
-    #     target=run_server
-    # )
-    # server_process.start()
-    server_process = TestClient(app)
+    server_process = multiprocessing.Process(
+        target=run_server
+    )
+    server_process.start()
+    # server_process = TestClient(app)
     time.sleep(1)  # Give server time to start
     
     try:
         # Run client test
         asyncio.run(func_client(port, expected_duration,job_one))
     finally:
-        pass
-        # server_process.terminate()
-        # server_process.join()
+        # pass
+        server_process.terminate()
+        server_process.join()
 
 # if __name__ == "__main__":
 #     run_integration_test()
