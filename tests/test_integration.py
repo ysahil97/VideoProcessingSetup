@@ -5,8 +5,8 @@ import multiprocessing
 import time
 from typing import Optional
 import logging
-from client import AsyncTranslationClient,TranslationResponse
-from server import run_server,app,job_one
+from src.videotranslation.client import AsyncTranslationClient,TranslationResponse
+from src.videotranslation.server import run_server,app,job_one
 from videoLogger import logger
 
 # logging.basicConfig(filename='test.log',filemode='w',level=logging.INFO,format='%(asctime)s - %(levelname)s: %(message)s')

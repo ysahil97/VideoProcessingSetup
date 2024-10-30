@@ -12,7 +12,7 @@ import threading
 import logging
 # from enum import Enum
 from videoLogger import logger
-from server import run_server,VideoTranslationStatus
+from src.videotranslation.server import run_server,VideoTranslationStatus
 
 # Configure logging
 # logging.basicConfig(level=logging.INFO)
