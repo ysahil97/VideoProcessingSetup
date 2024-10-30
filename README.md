@@ -6,14 +6,23 @@ This README is about the client-server setup, simulating the process of video tr
 
 ## Description of the files
 In `src/videotranslation`:
-    - `client.py`: Python file containing the client business logic, simulating the retry mechanism of the `/status` api with exponential backoff, while also employing asynchronous programming to reduce the waiting time for the user waiting on this call.
-    - `server.py`: Simple server setup with a configurable `processing_time` to simulate an intensive video translation process happening on the server
+    - `client.py`: 
+        - It Implements retry mechanism with exponential backoff for /status API calls
+        - Utilizes asynchronous programming to minimize user wait times
+        - Features caching system for frequent requests
+        - Implements circuit breaker pattern for fault tolerance
+    - `server.py`: 
+        - Built with FastAPI for high-performance API handling, comparable to Golang and Node.js
+        - Configurable processing_time to simulate intensive video translation processes
+        - RESTful endpoints for video processing operations
 
 Features of the client Library:
 - The api's are designed using FastAPI library, rather than basic `http.request` methods, to provide comparable performance to other backend languages such as Node.js and Golang
-- The client uses a Cache to store recent requests, which can decrease the api response time of requests provided frequently to server. Every entry of Cache has a ttl value which is used to discard the stale entries.
+- Cache:
+The client uses a Cache to store recent requests, which can decrease the api response time of requests provided frequently to server. Every entry of Cache has a ttl value which is used to discard the stale entries.
     - `tests/test_cache.py` contains the testcases pertaining to the proper functioning of the cache.
-- In order to prevent cascading errors occuring from the exceptions in the client, I have used a circuit-breaker design pattern, which is based on 3 internal states: "closed","open" and "half-open". The closed state means that the system is working well. If the number of failure occurences exceeds a threshold, the CircuitBreaker moves to the "open" state. Here, the api would not work, in order to examine the production system for its bugs. After a certain "Timeout" period since the last failure, the system is now able to execute and move into "half-open" state. From here, we have two possible paths:
+- Circuit Breaker Design Pattern:
+In order to prevent cascading errors occuring from the exceptions in the client, I have used a circuit-breaker design pattern, which is based on 3 internal states: "closed","open" and "half-open". The closed state means that the system is working well. If the number of failure occurences exceeds a threshold, the CircuitBreaker moves to the "open" state. Here, the api would not work, in order to examine the production system for its bugs. After a certain "Timeout" period since the last failure, the system is now able to execute and move into "half-open" state. From here, we have two possible paths:
     - If we encounter another failure, the Circuit Breaker reverts back to "open" state
     - If we encounter a success, the Circuit Breaker design pattern goes to "closed" state, opening the api for all the users.
 
