@@ -24,10 +24,10 @@ In `src/videotranslation`:
 
 Features of the client Library:
 - The api's are designed using FastAPI library, rather than basic `http.request` methods, to provide comparable performance to other backend languages such as Node.js and Golang
-- Cache:
+- **Cache**:
 The client uses a Cache to store recent requests, which can decrease the api response time of requests provided frequently to server. Every entry of Cache has a ttl value which is used to discard the stale entries.
     - `tests/test_cache.py` contains the testcases pertaining to the proper functioning of the cache.
-- Circuit Breaker Design Pattern:
+- **Circuit Breaker Design Pattern**:
 In order to prevent cascading errors occuring from the exceptions in the client, I have used a circuit-breaker design pattern, which is based on 3 internal states: **closed**,**open** and **half-open**. The **closed** state means that the system is working well. If the number of failure occurences exceeds a threshold, the CircuitBreaker moves to the **open** state. Here, the api would not work, in order to examine the production system for its bugs. After a certain "Timeout" period since the last failure, the system is now able to execute and move into **half-open** state. From here, there are two possible paths:
     - If we encounter another failure, the Circuit Breaker reverts back to **open** state
     - If we encounter a success, the Circuit Breaker design pattern goes to **closed** state, opening the api for all the users.
