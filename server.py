@@ -7,6 +7,7 @@ import random
 from typing import Dict
 from enum import Enum
 from urllib.parse import urlparse
+from videoLogger import logger
 
 class VideoTranslationStatus(Enum):
     PENDING = "pending"
@@ -27,6 +28,7 @@ class TranslationJob:
         elapsed_time = time.time() - self.start_time
         
         if elapsed_time >= self.expected_duration:
+            logger.debug(f"Elapsed time is greater than duration, the response is either error or completed")
             # 10% chance of error
             self.status = VideoTranslationStatus.ERROR if random.random() < self.error_percentage else VideoTranslationStatus.COMPLETED
             
@@ -47,9 +49,6 @@ async def get_status():
 
 def run_server():
     """Start the translation status server"""
-    # server_address = ('', 8000)
-    # httpd = http.server.HTTPServer(server_address, TranslationServer)
     jobs["job_one"] = TranslationJob(expected_duration=60)
     uvicorn.run(app,host="127.0.0.1",port=8000)
     print("Server running on port 8000...")
-    # httpd.serve_forever()

@@ -9,8 +9,14 @@ from functools import lru_cache
 from typing import Optional, Callable, Dict, Any
 from dataclasses import dataclass
 import threading
+import logging
 # from enum import Enum
+from videoLogger import logger
 from server import run_server,VideoTranslationStatus
+
+# Configure logging
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
 
 @dataclass
 class TranslationResponse:
@@ -25,11 +31,15 @@ class CacheManager:
         self._ttl = ttl_seconds
 
     def get(self,key:str) -> Optional[Any]:
+        
         if key in self._cache:
+            logger.debug(f"key is in cache")
             value,tstamp = self._cache[key]
             if time.time()-tstamp <= self._ttl:
+                logger.debug(f"Key {key} is within ttl")
                 return value
             else:
+                logger.debug(f"Key {key} is outside ttl, deleting it")
                 del self._cache[key]
                 return None
 
@@ -63,6 +73,7 @@ class AsyncTranslationClient:
         
     def _add_jitter(self, delay: float) -> float:
         """Add random jitter to avoid thundering herd problem"""
+        logger.debug("Setting up the jitter")
         return delay * (0.5 + random.random())
 
     @lru_cache(maxsize=1000)
@@ -74,13 +85,13 @@ class AsyncTranslationClient:
         cache_key = self._get_cache_key(job_id)
 
         cached_response = self.cache.get(cache_key)
-        print("Cached Response: ",cached_response)
+        logger.debug(f"Cached Response: {cached_response}")
         if cached_response:
             return cached_response
         """Make async HTTP request with error handling"""
         async with self.semaphore:  # Limit concurrent requests
             try:
-                print(f"{self.base_url}/status")
+                logger.debug(f"URL: {self.base_url}/status")
                 async with session.get(
                     f"{self.base_url}/status",
                     timeout=aiohttp.ClientTimeout(total=10)
@@ -93,7 +104,7 @@ class AsyncTranslationClient:
                         )
                     
                     data = await response.json()
-                    print("response data",data)
+                    logger.debug(f"response data {data}")
                     translation_result = TranslationResponse(
                         status=data["result"]
                     )
@@ -101,11 +112,13 @@ class AsyncTranslationClient:
                         self.cache.set(cache_key,translation_result)
                     return translation_result
             except asyncio.TimeoutError:
+                logger.error("Request Timed out")
                 return TranslationResponse(
                     status=VideoTranslationStatus.ERROR,
                     error="Request timed out"
                 )
             except Exception as e:
+                logger.critical(f"Exception: {e}")
                 return TranslationResponse(
                     status=VideoTranslationStatus.ERROR,
                     error=str(e)
@@ -136,23 +149,30 @@ class AsyncTranslationClient:
             while True:
                 # Check timeout
                 if time.time() - start_time > self.timeout:
-                    raise Exception("Timeout waiting for translation completion")
+                    error_msg = "Timeout waiting for translation completion"
+                    logger.critical(f"Exception: {error_msg}")
+                    raise Exception(error_msg)
                 
                 response = await self._make_request(session,job_id)
-                print("Response: ",response)
+                logger.debug(response)
                 if response.status == "error":
                     consecutive_errors += 1
+                    logger.error(f"Incrementing error count to {consecutive_errors}")
                     if consecutive_errors >= 3:
                         if error_callback:
+                            
                             await error_callback(response.error)
+                        logger.error(f"Multiple consecutive errors: {response.error}")
                         raise Exception(f"Multiple consecutive errors: {response.error}")
                 else:
                     consecutive_errors = 0
                 
                 if progress_callback:
+                    logger.debug(f"recording progress for the response {response}")
                     progress_callback(response)
                 
                 if response.status in ["completed", "error"]:
+                    logger.debug(f"Response is either completed or error")
                     return response
                 
                 # Add jitter and wait
@@ -160,7 +180,9 @@ class AsyncTranslationClient:
                 await asyncio.sleep(delay)
                 
                 # Increase delay for next iteration
+                logger.debug(f"Adding delay to the current delay value")
                 current_delay = min(current_delay * 2, self.max_delay)
+                logger.debug(f"New Delay Value: {current_delay}")
     
     async def __aenter__(self):
         self.session = aiohttp.ClientSession()
