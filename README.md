@@ -1,6 +1,6 @@
-# Video Processing Site
+# [HeyGen] Video Processing Site
 
-- This is the submission for my take home assessment for HeyGen Backend Engineer role 2024
+- This is the submission for my take home assessment for **HeyGen** Backend Engineer role 2024
 
 This README is about the client-server setup, simulating the process of video translation in a server. The goal of this project is to create a developer-friendly client library, which takes care of sending this api to the server while taking into account the intermediate pending responses that the client can face most of the times.
 
