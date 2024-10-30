@@ -39,10 +39,10 @@ In order to prevent cascading errors occuring from the exceptions in the client,
 
 ## Usage of the Client Library
 In `client.py`, the async method `make_complete_request()` takes care of hitting the `/status` endpoint of the server with multiple retries. As it is an asynchronous call, other async functions could work in the cases when the given function function is in a waiting stage, thereby reducing wastage of idle time otherwise occuring in synchronous implementation. The arguments of these functions are two callbacks:
-- Progress callback: callback to print the progress (status of intermediate API request) in console
-- Error callback: callback to log the errors of the client implementation.
-- Job Id: id of the concerned video translation job
-    - currently job id is hardcoded, as the api requirements strictly suggested "/status" api, but it can be easily extended to fetch status result for any video translation job.
+- *Progress callback*: callback to print the progress (status of intermediate API request) in console
+- *Error callback*: callback to log the errors of the client implementation.
+- *Job Id*: id of the concerned video translation job
+    - [Note] currently job id is hardcoded, as the api requirements strictly suggested "/status" api, but it can be easily extended to fetch status result for any video translation job.
 
 
 ## Usage
