@@ -1,9 +1,4 @@
-import asyncio
-# from fastapi.testclient import TestClient
-import multiprocessing
 import time
-from typing import Optional
-import logging
 from src.videotranslation.client import CircuitBreaker
 
 def test_circuit_breaker_near_to_failure():

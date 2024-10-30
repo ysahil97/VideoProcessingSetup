@@ -42,6 +42,7 @@ class CacheManager:
                 logger.debug(f"Key {key} is outside ttl, deleting it")
                 del self._cache[key]
                 return None
+        return None
 
     def set(self, key:str,value:Any):
         self._cache[key] = (value,time.time())
