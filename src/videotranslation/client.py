@@ -46,6 +46,36 @@ class CacheManager:
     def set(self, key:str,value:Any):
         self._cache[key] = (value,time.time())
 
+
+class CircuitBreaker:
+    def __init__(self,failure_threshold: int = 5,reset_timeout: int=60):
+        self.failure_count = 0
+        self.failure_threshold = failure_threshold
+        self.reset_timeout = reset_timeout
+        self.last_failure_time = 0
+        self.state = "closed"
+
+    def record_failure(self):
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            logger.error(f"Error threshold is broken, system is faulty")
+            self.state = "open"
+
+    def record_success(self):
+        if self.state == "half-open":
+            self.state = "closed"
+        self.failure_count = 0
+
+    def can_execute(self) -> bool:
+        if self.state == "closed":
+            return True
+        if self.state == "open":
+            if time.time() - self.last_failure_time >= self.reset_timeout:
+                self.state = "half-open"
+                return True
+        return self.state == "half-open"
+
 class AsyncTranslationClient:
     def __init__(self, 
                  base_url: str,
@@ -69,6 +99,7 @@ class AsyncTranslationClient:
         self.max_delay = max_delay
         self.timeout = timeout
         self.cache = CacheManager(cache_ttl)
+        self.circuit_breaker = CircuitBreaker()
         self.semaphore = asyncio.Semaphore(max_concurrent_requests)
         
     def _add_jitter(self, delay: float) -> float:
@@ -88,6 +119,12 @@ class AsyncTranslationClient:
         logger.debug(f"Cached Response: {cached_response}")
         if cached_response:
             return cached_response
+        
+        if not self.circuit_breaker.can_execute():
+            return TranslationResponse(
+                status=VideoTranslationStatus.ERROR,
+                error=f"CircuitBreaker is in open state, system is faulty" 
+            )
         """Make async HTTP request with error handling"""
         async with self.semaphore:  # Limit concurrent requests
             try:
@@ -98,6 +135,7 @@ class AsyncTranslationClient:
                 ) as response:
                     print("Make request response: ",response)
                     if response.status != 200:
+                        self.circuit_breaker.record_failure()
                         return TranslationResponse(
                             status=VideoTranslationStatus.ERROR,
                             error=f"Server returned status {response.status}"
@@ -110,6 +148,7 @@ class AsyncTranslationClient:
                     )
                     if translation_result.status != VideoTranslationStatus.PENDING:
                         self.cache.set(cache_key,translation_result)
+                    self.circuit_breaker.record_success()
                     return translation_result
             except asyncio.TimeoutError:
                 logger.error("Request Timed out")
@@ -119,6 +158,7 @@ class AsyncTranslationClient:
                 )
             except Exception as e:
                 logger.critical(f"Exception: {e}")
+                self.circuit_breaker.record_failure()
                 return TranslationResponse(
                     status=VideoTranslationStatus.ERROR,
                     error=str(e)

@@ -7,6 +7,6 @@ logger.setLevel(logging.DEBUG)  # Set the desired logging level
 
 # Create a handler to output logs to the console
 handler = logging.FileHandler(filename='logs/test.log',mode='w')
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s %(funcName)20s- %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s [%(module)s] %(funcName)20s- %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
