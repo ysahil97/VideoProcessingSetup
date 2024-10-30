@@ -29,6 +29,8 @@ class TranslationJob:
 
 app = FastAPI()
 jobs: Dict[str, TranslationJob] = {}
+#For single job purposes
+job_one = "job_one"
 
 @app.get("/status")
 async def get_status():

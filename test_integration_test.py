@@ -6,7 +6,7 @@ import time
 from typing import Optional
 import logging
 from client import AsyncTranslationClient,TranslationResponse
-from server import run_server,app
+from server import run_server,app,job_one
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,8 +15,8 @@ def status_callback(status: TranslationResponse):
     logger.info(f"Status = {status.status}")
     return {"Status":status.status}
 
-async def func_test_client(port: int, expected_duration: int):
-    base_url = f"http://localhost:{port}"
+async def func_client(url_port: int, expected_duration: int,job_id: str):
+    base_url = f"http://localhost:{url_port}"
     
     async with AsyncTranslationClient(base_url) as client:
         try:
@@ -48,7 +48,7 @@ def test_run_integration_test():
     
     try:
         # Run client test
-        asyncio.run(func_test_client(port, expected_duration))
+        asyncio.run(func_client(port, expected_duration,job_one))
     finally:
         pass
         # server_process.terminate()
