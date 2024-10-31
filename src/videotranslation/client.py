@@ -25,7 +25,7 @@ class TranslationResponse:
     metadata: Optional[Dict[str, Any]] = None
 
 
-class CacheManager:
+class StatusCache:
     def __init__(self,ttl_seconds: int = 60):
         self._cache: Dict[str,tuple(Any,float)] = {}
         self._ttl = ttl_seconds
@@ -99,7 +99,7 @@ class AsyncTranslationClient:
         self.initial_delay = initial_delay
         self.max_delay = max_delay
         self.timeout = timeout
-        self.cache = CacheManager(cache_ttl)
+        self.cache = StatusCache(cache_ttl)
         self.circuit_breaker = CircuitBreaker()
         self.semaphore = asyncio.Semaphore(max_concurrent_requests)
         
